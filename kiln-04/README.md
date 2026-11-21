@@ -1,4 +1,4 @@
-# KILN // 04 (REV 3.0)
+# KILN // 04 
 
 2D industrial precision platformer built on HTML5 Canvas, custom pixel-art sprite atlases, and sampled mechanical WAV foley.
 
