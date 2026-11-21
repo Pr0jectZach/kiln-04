@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KILN // 04 : Unified Operator Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/game.css">
+  <link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+  <div id="wrapper">
+    <div class="top-bar">
+      <div class="console-title">
+        <h1>KILN // 04</h1>
+        <span class="console-sub">REV 3.0 // SWEPT-CCD &amp; SCROLLING BORE</span>
+      </div>
+      <div class="top-controls">
+        <button class="util-btn util-btn-accent" id="manual-btn" type="button">MANUAL [TAB]</button>
+        <button class="util-btn" id="mute-btn" type="button">AUDIO: ON [M]</button>
+        <button class="util-btn" id="reset-btn" type="button">RESET [R]</button>
+      </div>
+    </div>
+
+    <div id="hud">
+      <div class="hud-item">
+        <span class="hud-label">YIELD</span>
+        <span class="hud-value" id="score-val">000000</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">SECTOR</span>
+        <span class="hud-value" id="level-val">01</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">HULL PLATES</span>
+        <div class="hud-value" id="lives-val">
+          <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+        </div>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">CELLS SEATED</span>
+        <span class="hud-value" id="coins-val">0/0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">BORE CLOCK</span>
+        <span class="hud-value" id="timer-val">0.0S</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">PEAK YIELD</span>
+        <span class="hud-value" id="best-val">000000</span>
+      </div>
+    </div>
+
+    <div id="game-container">
+      <canvas id="canvas" width="800" height="450"></canvas>
+
+      <div class="overlay" id="start-screen">
+        <div class="modal-card">
+          <div class="modal-top">
+            <h2>SYSTEM STANDBY</h2>
+            <span class="modal-code">UNIT // KILN-04</span>
+          </div>
+          <p>Seat all hex power cells across the scrolling bore shaft to unseal the upper bulkhead. Crush track scrubbers from above to reset mid-air thrust.</p>
+          <table class="hs-table" id="start-hs-table">
+            <thead>
+              <tr><th>#</th><th>OP_ID</th><th class="hs-score">YIELD</th><th>SEC</th></tr>
+            </thead>
+            <tbody id="start-hs-body"></tbody>
+          </table>
+          <div class="modal-actions">
+            <span style="font-size: 0.7rem; color: var(--ink-muted);">[SPACE] DEPLOY &nbsp;|&nbsp; [TAB] SPEC MANUAL</span>
+            <button class="btn" id="start-btn" type="button">DEPLOY CHASSIS</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay" id="gameover-screen" style="display: none;">
+        <div class="modal-card">
+          <div class="modal-top">
+            <h2 style="color: var(--crimson);">CHASSIS SHEARED</h2>
+            <span class="modal-code">STATUS // TERMINATED</span>
+          </div>
+          <div class="score-readout-row">
+            <span class="score-big-lbl">FINAL TELEMETRY YIELD</span>
+            <div class="score-big" id="final-score">000000</div>
+          </div>
+          <div id="go-record-msg" class="new-record" style="display: none;">PEAK YIELD RECORDED</div>
+          <div id="go-name-row" class="name-input-row" style="display: none;">
+            <input class="name-input" id="go-name-input" maxlength="8" placeholder="OPERATOR ID" autocomplete="off">
+            <button class="btn" id="go-save-btn" type="button">LOG ID</button>
+          </div>
+          <table class="hs-table" id="go-hs-table">
+            <thead>
+              <tr><th>#</th><th>OP_ID</th><th class="hs-score">YIELD</th><th>SEC</th></tr>
+            </thead>
+            <tbody id="go-hs-body"></tbody>
+          </table>
+          <div class="modal-actions">
+            <span style="font-size: 0.7rem; color: var(--ink-muted);">HULL INTEGRITY EXHAUSTED</span>
+            <button class="btn btn-crimson" id="retry-btn" type="button">REBOOT RIG</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay" id="win-screen" style="display: none;">
+        <div class="modal-card">
+          <div class="modal-top">
+            <h2 style="color: var(--lime);">ALL BORES CLEARED</h2>
+            <span class="modal-code">STATUS // NOMINAL</span>
+          </div>
+          <div class="score-readout-row">
+            <span class="score-big-lbl">TOTAL SHIFT YIELD</span>
+            <div class="score-big" id="win-score">000000</div>
+          </div>
+          <div id="win-record-msg" class="new-record" style="display: none;">PEAK YIELD RECORDED</div>
+          <div id="win-name-row" class="name-input-row" style="display: none;">
+            <input class="name-input" id="win-name-input" maxlength="8" placeholder="OPERATOR ID" autocomplete="off">
+            <button class="btn" id="win-save-btn" type="button">LOG ID</button>
+          </div>
+          <table class="hs-table" id="win-hs-table">
+            <thead>
+              <tr><th>#</th><th>OP_ID</th><th class="hs-score">YIELD</th><th>SEC</th></tr>
+            </thead>
+            <tbody id="win-hs-body"></tbody>
+          </table>
+          <div class="modal-actions">
+            <span style="font-size: 0.7rem; color: var(--ink-muted);">MAINTENANCE CYCLE COMPLETE</span>
+            <button class="btn" id="win-retry-btn" type="button">NEW SHIFT</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="level-announce"></div>
+    </div>
+
+    <div id="controls-hint">
+      <span>[A/D] LATERAL DRIVE</span>
+      <span>[SPACE/W] THRUST &amp; DOUBLE BURN</span>
+      <span>[S/DOWN] PNEUMATIC SLAM</span>
+      <span>[TAB] MANUAL DRAWER</span>
+      <span>[M] AUDIO</span>
+    </div>
+  </div>
+
+  <!-- Slide-Over Operator Manual Drawer (Persists Audio & Game State) -->
+  <div class="manual-backdrop" id="manual-backdrop"></div>
+  <aside class="manual-drawer" id="manual-drawer" aria-label="Operator Manual">
+    <div class="drawer-topbar">
+      <div class="drawer-brand">
+        <span class="drawer-brand-code">KILN // 04 TECHNICAL MANUAL</span>
+        <span class="drawer-brand-rev">REV 3.0.0 // PCCE-26</span>
+      </div>
+      <button class="drawer-close-btn" id="drawer-close-btn" type="button">RESUME CONSOLE [ESC]</button>
+    </div>
+
+    <header class="hero-sheet">
+      <div class="hero-left">
+        <div>
+          <span class="spec-stamp">MAINTENANCE CHASSIS SPEC // REV 3.0</span>
+          <h2 class="hero-heading">BORE RIG<br><span>KILN-04</span></h2>
+          <p class="hero-summary">
+            Operate a tethered maintenance chassis across three multi-screen vertical smelter bores. Pull every hex power cell from the catwalks, crush automated track scrubbers from above, and unseal the upper bulkhead before par lock.
+          </p>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="monitor-frame">
+          <div class="monitor-header">
+            <span>CAM_01 // SPRITE ATLAS FEED</span>
+            <span class="monitor-status">SIGNAL LOCKED</span>
+          </div>
+          <canvas class="preview" id="preview" width="420" height="160"></canvas>
+        </div>
+
+        <div class="telemetry-readout">
+          <div class="telem-cell">
+            <span class="telem-key">COLLISIONSOLVER</span>
+            <span class="telem-val">SWEPT CCD (6PX)</span>
+          </div>
+          <div class="telem-cell">
+            <span class="telem-key">CAMERA RIG</span>
+            <span class="telem-val">DEADZONE + RADAR</span>
+          </div>
+          <div class="telem-cell">
+            <span class="telem-key">PAR WINDOW</span>
+            <span class="telem-val">32.0 SEC</span>
+          </div>
+          <div class="telem-cell">
+            <span class="telem-key">FOLEY BANK</span>
+            <span class="telem-val">9 PCM WAV ASSETS</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="spec-section">
+      <div class="spec-sidebar">
+        <span class="spec-index">SEC // 01</span>
+        <h3 class="spec-heading">CHASSIS SYSTEMS</h3>
+        <p class="spec-note">Mechanical rules governing rig movement, swept collision, and bulkhead locks.</p>
+      </div>
+      <div class="spec-body">
+        <div class="mechanics-list">
+          <article class="mech-block">
+            <div class="mech-header">
+              <h4 class="mech-title">LATERAL &amp; THRUST</h4>
+              <span class="mech-code">SYS-A1</span>
+            </div>
+            <p class="mech-copy">Acceleration-curved horizontal drive with ledge coyote grace frames, jump input buffering, and variable-height ascent cut when releasing thrust early.</p>
+          </article>
+
+          <article class="mech-block">
+            <div class="mech-header">
+              <h4 class="mech-title">SWEPT-CCD SLAM</h4>
+              <span class="mech-code">SYS-A2</span>
+            </div>
+            <p class="mech-copy">Triggering downward drive mid-air fires the pneumatic ram at 18.5 px/frame. Substepped continuous collision detection guarantees zero catwalk tunneling.</p>
+          </article>
+
+          <article class="mech-block">
+            <div class="mech-header">
+              <h4 class="mech-title">TRACK SCRUBBERS</h4>
+              <span class="mech-code">SYS-B1</span>
+            </div>
+            <p class="mech-copy">Automated scrubbers sweep catwalk spans. Dropping onto their top piston plate shears the unit and resets your mid-air thruster charge.</p>
+          </article>
+
+          <article class="mech-block">
+            <div class="mech-header">
+              <h4 class="mech-title">BORE RADAR &amp; HATCH</h4>
+              <span class="mech-code">SYS-B2</span>
+            </div>
+            <p class="mech-copy">Use the top-right radar minimap to track off-screen power cells across the scrolling shaft. Seat all cells to unseal the upper blast shutters.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="spec-section">
+      <div class="spec-sidebar">
+        <span class="spec-index">SEC // 02</span>
+        <h3 class="spec-heading">BORE SECTORS</h3>
+        <p class="spec-note">Three expanded scrolling maintenance bays. Hull damage carries across sectors.</p>
+      </div>
+      <div class="spec-body">
+        <div class="sector-stack">
+          <div class="sector-row">
+            <div class="sector-num">01</div>
+            <div class="sector-info">
+              <div class="sector-title-line">
+                <span class="sector-name">SLAG PIT</span>
+                <span class="hazard-tag tag-low">1280x600</span>
+              </div>
+              <p class="sector-desc">Multi-tier smelter floor with riveted static catwalks and 3 patrol scrubbers.</p>
+            </div>
+            <div class="sector-metrics">
+              <div class="metric-box"><span class="metric-lbl">CELLS</span><span class="metric-num">10</span></div>
+              <div class="metric-box"><span class="metric-lbl">SCRUBBERS</span><span class="metric-num">03</span></div>
+              <div class="metric-box"><span class="metric-lbl">CLEAR</span><span class="metric-num">+500</span></div>
+            </div>
+          </div>
+
+          <div class="sector-row">
+            <div class="sector-num">02</div>
+            <div class="sector-info">
+              <div class="sector-title-line">
+                <span class="sector-name">GANTRY BAY</span>
+                <span class="hazard-tag tag-med">1360x680</span>
+              </div>
+              <p class="sector-desc">Split floor drop pits and 3 reciprocating hazard-striped crane gantries.</p>
+            </div>
+            <div class="sector-metrics">
+              <div class="metric-box"><span class="metric-lbl">CELLS</span><span class="metric-num">12</span></div>
+              <div class="metric-box"><span class="metric-lbl">SCRUBBERS</span><span class="metric-num">05</span></div>
+              <div class="metric-box"><span class="metric-lbl">CLEAR</span><span class="metric-num">+500</span></div>
+            </div>
+          </div>
+
+          <div class="sector-row">
+            <div class="sector-num">03</div>
+            <div class="sector-info">
+              <div class="sector-title-line">
+                <span class="sector-name">HIGH STACK</span>
+                <span class="hazard-tag tag-high">1200x820</span>
+              </div>
+              <p class="sector-desc">Deep vertical shaft climb bordered by narrow step plates and fast-cycling scrubbers.</p>
+            </div>
+            <div class="sector-metrics">
+              <div class="metric-box"><span class="metric-lbl">CELLS</span><span class="metric-num">13</span></div>
+              <div class="metric-box"><span class="metric-lbl">SCRUBBERS</span><span class="metric-num">06</span></div>
+              <div class="metric-box"><span class="metric-lbl">CLEAR</span><span class="metric-num">+500</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="spec-section">
+      <div class="spec-sidebar">
+        <span class="spec-index">SEC // 03</span>
+        <h3 class="spec-heading">INPUT &amp; SCORING</h3>
+        <p class="spec-note">Direct keyboard bindings and local telemetry log values.</p>
+      </div>
+      <div class="spec-body">
+        <div class="dual-table-grid">
+          <table class="data-table">
+            <thead>
+              <tr><th>BINDING</th><th>ACTUATION</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="kbd-chip">A / D</span> <span class="kbd-chip">LEFT / RIGHT</span></td><td>Lateral chassis drive</td></tr>
+              <tr><td><span class="kbd-chip">SPACE</span> <span class="kbd-chip">W</span> <span class="kbd-chip">UP</span></td><td>Primary &amp; secondary thruster pulse</td></tr>
+              <tr><td><span class="kbd-chip">S</span> <span class="kbd-chip">DOWN</span></td><td>Airborne pneumatic slam</td></tr>
+              <tr><td><span class="kbd-chip">TAB</span> / <span class="kbd-chip">M</span> / <span class="kbd-chip">R</span></td><td>Manual drawer / Mute audio / Reset bore</td></tr>
+            </tbody>
+          </table>
+
+          <table class="data-table">
+            <thead>
+              <tr><th>EVENT</th><th>YIELD</th><th>CONDITION</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Seat power cell</td><td class="pts-col">+100</td><td>Required for bulkhead release</td></tr>
+              <tr><td>Crush scrubber</td><td class="pts-col">+200</td><td>Top-down impact, resets air jump</td></tr>
+              <tr><td>Clear bulkhead</td><td class="pts-col">+500</td><td>Enter unsealed hatch</td></tr>
+              <tr><td>Under-par bonus</td><td class="pts-col">+300</td><td>Sector time under 32.0s</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <footer class="sheet-footer">
+      <span>KILN // 04 MAINTENANCE SIMULATOR</span>
+      <span>PCCE WEB-VERSE 2026 // REV 3.0</span>
+    </footer>
+  </aside>
+
+  <script src="js/levels.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/preview.js"></script>
+</body>
+</html>
